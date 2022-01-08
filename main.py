@@ -4,17 +4,45 @@ import time as t
 import sys
 import random as r
 import sqlite3 as sql
+
+from pygame import image
 # /imports
 
 
 # other functions
 def game_boost_shop(screen):
-    pass
+    image = pygame.image.load('photo/Magaz.png')
+    screen.blit(image, (0, 0))
+    while True:
+        for event in pygame.event.get():
+                if (event.type == pygame.QUIT):
+                    pygame.quit()
+                elif (event.type == pygame.MOUSEBUTTONDOWN):
+                    x, y = event.pos
+                    if ((x > 179) and (x < 383)) and ((y > 373) and (y < 448)):
+                        print('1')
+                    elif ((x > 387) and (x < 631)) and ((y > 373) and (y < 448)):
+                        print('2')
+                    elif ((x > 637) and (x < 834)) and ((y > 373) and (y < 448)):
+                        print('3')
+                    elif ((x > 7) and (x < 160)) and ((y > 12) and (y < 59)):
+                        return
+        pygame.display.flip()
+        clock.tick(50)
 
 def game_rules(screen):
-    pass
+    image = pygame.image.load('photo/rule.png')
+    screen.blit(image, (0, 0))
+    while True:
+        for event in pygame.event.get():
+                if (event.type == pygame.QUIT):
+                    pygame.quit()
+                elif (event.type == pygame.MOUSEBUTTONDOWN):
+                    return
+        pygame.display.flip()
+        clock.tick(50)
 
-def game_start_screen(screen):
+def game_start_screen(screen) -> bool:
     image = pygame.image.load('photo/start.png')
     screen.blit(image, (0, 0))
     while True:
@@ -26,30 +54,31 @@ def game_start_screen(screen):
                 if ((x > 658) and (x < 982)) and ((y > 32) and (y < 112)):
                     return True
                 elif ((x > 658) and (x < 982)) and ((y > 139) and (y < 220)):
-                    print('2')
+                    game_boost_shop(screen)
+                    image = pygame.image.load('photo/start.png')
+                    screen.blit(image, (0, 0))
                 elif ((x > 658) and (x < 982)) and ((y > 242) and (y < 336)):
-                    print('3')
+                    game_rules(screen)
+                    image = pygame.image.load('photo/start.png')
+                    screen.blit(image, (0, 0))
                 elif ((x > 39) and (x < 135)) and ((y > 415) and (y < 446)):
                     return False
         pygame.display.flip()
         clock.tick(50)
 
-def game_death_screen(screen):
-    screen.fill((0, 0, 0))
-    font = pygame.font.Font(None, 50)
-    text = font.render("Вы Погибли", True, (255, 0, 0))
-    text_x = 75
-    text_y = 75
-    text_w = text.get_width()
-    text_h = text.get_height()
-    screen.blit(text, (text_x, text_y))
+def game_death_screen(screen) -> bool:
+    image = pygame.image.load('photo/death.png')
+    screen.blit(image, (0, 0))
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
-            elif event.type == pygame.KEYDOWN or \
-                    event.type == pygame.MOUSEBUTTONDOWN:
-                return True
+            elif (event.type == pygame.MOUSEBUTTONDOWN):
+                x, y = event.pos
+                if ((x > 46) and (x < 350)) and ((y > 321) and (y < 397)):
+                    return True
+                if ((x > 631) and (x < 936)) and ((y > 321) and (y < 397)):
+                    return False
         pygame.display.flip()
         clock.tick(50)
 # /other functions
