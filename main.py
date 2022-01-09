@@ -13,8 +13,22 @@ from pygame.transform import scale
 
 # other functions
 def game_boost_shop(screen):
+    global cur, con
+    gold = pygame.font.Font(None, 50)
+    boost = pygame.font.Font(None, 50)
+    money = cur.execute('SELECT money FROM user WHERE id = 1').fetchall()[0][0]
+    freeze, clean, reload = cur.execute('SELECT freeze, clean, reload FROM boosts WHERE id = 1').fetchall()[0]
+    money_text = gold.render('Монеты: ' + str(money), False, (255, 255, 0))
+    fre_text = boost.render(str(freeze), False, (255, 255, 255))
+    cle_text = boost.render(str(clean), False, (255, 255, 255))
+    rel_text = boost.render(str(reload), False, (255, 255, 255))
     image = pygame.image.load('photo/Magaz.png')
     screen.blit(image, (0, 0))
+    screen.blit(money_text, (700, 25))
+    screen.blit(fre_text, (340, 215))
+    screen.blit(rel_text, (585, 215))
+    screen.blit(cle_text, (807, 215))
+
     while True:
         for event in pygame.event.get():
                 if (event.type == pygame.QUIT):
@@ -22,13 +36,43 @@ def game_boost_shop(screen):
                 elif (event.type == pygame.MOUSEBUTTONDOWN):
                     x, y = event.pos
                     if ((x > 179) and (x < 383)) and ((y > 373) and (y < 448)):
-                        print('1')
+                        if (money >= 20):
+                            freeze += 1
+                            money -= 20
+                            cur.execute('UPDATE user SET money = money - 20 WHERE id = 1')
+                            cur.execute('UPDATE boosts SET freeze = freeze + 1 WHERE id = 1')
+                            con.commit()
+                        else:
+                            pass
                     elif ((x > 387) and (x < 631)) and ((y > 373) and (y < 448)):
-                        print('2')
+                        if (money >= 30):
+                            reload += 1
+                            money -= 30
+                            cur.execute('UPDATE user SET money = money - 30 WHERE id = 1')
+                            cur.execute('UPDATE boosts SET reload = reload + 1 WHERE id = 1')
+                            con.commit()
+                        else:
+                            pass
                     elif ((x > 637) and (x < 834)) and ((y > 373) and (y < 448)):
-                        print('3')
+                        if (money >= 15):
+                            clean += 1
+                            money -= 15
+                            cur.execute('UPDATE user SET money = money - 15 WHERE id = 1')
+                            cur.execute('UPDATE boosts SET clean = clean + 1 WHERE id = 1')
+                            con.commit()
+                        else:
+                            pass
                     elif ((x > 7) and (x < 160)) and ((y > 12) and (y < 59)):
                         return
+        money_text = gold.render('Монеты: ' + str(money), False, (255, 255, 0))
+        fre_text = boost.render(str(freeze), False, (255, 255, 255))
+        cle_text = boost.render(str(clean), False, (255, 255, 255))
+        rel_text = boost.render(str(reload), False, (255, 255, 255))
+        screen.blit(image, (0, 0))
+        screen.blit(money_text, (700, 25))
+        screen.blit(fre_text, (340, 215))
+        screen.blit(rel_text, (585, 215))
+        screen.blit(cle_text, (807, 215))
         pygame.display.flip()
         clock.tick(50)
 
@@ -168,24 +212,28 @@ if (__name__ == '__main__'):
     cur = con.cursor()
     f1 = pygame.font.Font(None, 50)
     f2 = pygame.font.Font(None, 25)
+    fre_font = pygame.font.Font(None, 40)
     pygame.display.set_caption('LongLiveTheKing')
+    clock = pygame.time.Clock()
     screen.fill((0, 0, 0))
     # /window set up
     
     while app_running:
+        app_running = game_start_screen(screen)
         # variables
         running = True
         moving_x_up = False
         moving_y_up = False
         moving_x_down = False
         moving_y_down = False
-        clock = pygame.time.Clock()
         bullets_on_screen = list()
         counter = 0
         time_was = 0
         time_now = 0
         money_earned = 0
         bullet_count = 3
+        pause_countdown = 4
+        game_paused = False
         img_fre = pygame.image.load('photo/fre.png')
         img_cle = pygame.image.load('photo/cle.png')
         img_rel = pygame.image.load('photo/rel.png')
@@ -201,7 +249,6 @@ if (__name__ == '__main__'):
         # game set up
 
         # game
-        app_running = game_start_screen(screen)
         if (app_running == False):
             break
         while (running):
@@ -223,6 +270,17 @@ if (__name__ == '__main__'):
                         if (clean != 0):
                             clean -= 1
                             bullets_on_screen.clear()
+                    if (event.key == pygame.K_r):
+                        if (reload != 0) and (bullet_count >= 3):
+                            reload -= 1
+                            bullet_count -= 2
+                    if (event.key == pygame.K_f):
+                        if (freeze != 0):
+                            freeze -= 1
+                            game_paused = True
+                            pause_countdown = 3
+                            pause_countdown_text = fre_font.render(str(pause_countdown), False, (0, 0, 255))
+                            screen.blit(pause_countdown_text, (670, 30))
                 if (event.type == pygame.KEYUP):
                     if (event.key == pygame.K_d):
                         moving_x_up = False
@@ -254,18 +312,25 @@ if (__name__ == '__main__'):
                 bullet_count += 2
                 money_earned += 10
             if (time_now != time_was):
-                for bullet in range(bullet_count):
-                    new = Bullet()
-                    bullets_on_screen.append(new)
+                if not(game_paused):
+                    for bullet in range(bullet_count):
+                        new = Bullet()
+                        bullets_on_screen.append(new)
+                else:
+                    pause_countdown -= 1
             # /time checker
 
             # bullet movements and death
+            if (pause_countdown == 0):
+                game_paused = False
             for bullet in bullets_on_screen:
-                bullet.set_new_entity_pos()
+                if not(game_paused):
+                    bullet.set_new_entity_pos()
                 if ((player_character.x > bullet.x - 13) and (player_character.x < bullet.x + 13)) and (player_character.y > bullet.y - 13) and (player_character.y < bullet.y + 13):
                     new_record = time_now
                     cur.execute('UPDATE user SET record = ? WHERE record < ?', (new_record, new_record))
                     cur.execute('UPDATE user SET money = money + ? WHERE id = 1', (money_earned, ))
+                    cur.execute('UPDATE boosts SET freeze = ?, clean = ?, reload = ? WHERE id = 1', (freeze, clean, reload))
                     con.commit()
                     running = False
                     app_running = game_death_screen(screen)
@@ -307,6 +372,9 @@ if (__name__ == '__main__'):
             screen.blit(img_cle, (720, 110))
             screen.blit(img_fre, (720, 190))
             screen.blit(img_rel, (720, 270))
+            if (game_paused):
+                    pause_countdown_text = fre_font.render(str(pause_countdown), False, (0, 0, 255))
+                    screen.blit(pause_countdown_text, (670, 30))
             pygame.draw.line(screen, (255, 0, 0), (700, 0), (700, 500), 3)
             pygame.display.flip()
             screen.fill((0, 0, 0))
