@@ -103,8 +103,8 @@ def game_start_screen(screen) -> bool:
     image = pygame.image.load('photo/start.png')
     screen.blit(image, (0, 0))
     font = pygame.font.Font(None, 50)
-    record_from_db = \
-    cur.execute('SELECT record FROM user WHERE id = 1').fetchall()[0][0]
+    record_from_db = cur.execute('''SELECT record FROM
+    user WHERE id = 1''').fetchall()[0][0]
     record = font.render(str(record_from_db), False, (255, 0, 0))
     screen.blit(record, (500, 75))
     while True:
@@ -320,8 +320,8 @@ if (__name__ == '__main__'):
         img_cle = pygame.transform.scale(img_cle, (50, 50))
         img_rel = pygame.transform.scale(img_rel, (50, 50))
 
-        record_now = \
-        cur.execute('SELECT record FROM user WHERE id = 1').fetchall()[0][0]
+        record_now = cur.execute('''SELECT record FROM
+        user WHERE id = 1''').fetchall()[0][0]
         freeze, clean, reload = cur.execute('''SELECT freeze, clean, reload
         FROM boosts WHERE id = 1''').fetchall()[0]
         # /variables
@@ -332,12 +332,12 @@ if (__name__ == '__main__'):
         # game set up
 
         # game
-        if (app_running == False):
+        if not(app_running):
             break
 
         while (running):
             # events
-            for event in pygame.event.get():  # event checker. Get all events, done by player
+            for event in pygame.event.get():  # event checker
                 if (event.type == pygame.QUIT):
                     running = False
                     app_running = False
@@ -454,9 +454,8 @@ if (__name__ == '__main__'):
                     cur.execute(
                         'UPDATE user SET money = money + ? WHERE id = 1',
                         (money_earned,))
-                    cur.execute('''UPDATE boosts SET freeze = ?,
-                    clean = ?, reload = ? WHERE id = 1''',
-                        (freeze, clean, reload))
+                    cur.execute('''UPDATE boosts SET freeze = ?, clean = ?,
+                    reload = ? WHERE id = 1''', (freeze, clean, reload))
                     con.commit()
                     running = False
                     app_running = game_death_screen(screen)
